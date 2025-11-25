@@ -1,0 +1,5 @@
+{
+  "name": "Schulte Focus Master",
+  "description": "A classic 5x5 Schulte Grid application designed to train peripheral vision and attention stability. Features real-time tracking, progress history, and AI-powered performance analysis.",
+  "requestFramePermissions": []
+}
