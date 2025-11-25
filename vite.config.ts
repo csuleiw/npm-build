@@ -6,7 +6,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
   return {
     // 👇 关键：添加 base（必须匹配你的仓库名！）
-    base: '/npm-build/',
+   
 
     server: {
       port: 3000,
