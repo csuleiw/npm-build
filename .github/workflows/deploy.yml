@@ -1,14 +1,9 @@
-name: Deploy to GitHub Pages
-on:
-  push:
-    branches: [main]
+name: Debug Build
 
-# 👇 关键：授予写权限
-permissions:
-  contents: write  # 允许推送 gh-pages 分支
+on: [push]
 
 jobs:
-  deploy:
+  debug:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,11 +13,16 @@ jobs:
         with:
           node-version: 18
 
-      - run: npm install
-      - run: npm run build
+      - name: Install
+        run: npm ci
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
+      - name: Build
+        run: npm run build
+
+      - name: Check output
+        run: |
+          echo "=== Current dir ==="
+          pwd
+          ls -la
+          echo "=== Dist content ==="
+          ls -la dist || echo "❌ dist NOT FOUND"
