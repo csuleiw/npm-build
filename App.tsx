@@ -7,6 +7,24 @@ import { GameStatus, GameResult, GridCellData, AIAnalysisResponse } from './type
 import { analyzePerformance } from './services/geminiService';
 import { playClickSound, playErrorSound, playWinSound, startBGM, stopBGM } from './services/audioService';
 
+const GRID_COLORS = [
+  'text-red-600',
+  'text-orange-600',
+  'text-amber-600',
+  'text-green-600',
+  'text-emerald-600',
+  'text-teal-600',
+  'text-cyan-600',
+  'text-blue-600',
+  'text-indigo-600',
+  'text-violet-600',
+  'text-purple-600',
+  'text-fuchsia-600',
+  'text-pink-600',
+  'text-rose-600',
+  'text-slate-800'
+];
+
 function App() {
   const [status, setStatus] = useState<GameStatus>(GameStatus.IDLE);
   const [gridNumbers, setGridNumbers] = useState<GridCellData[]>([]);
@@ -31,7 +49,13 @@ function App() {
       const j = Math.floor(Math.random() * (i + 1));
       [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
     }
-    const cells: GridCellData[] = numbers.map((val, idx) => ({ value: val, id: idx }));
+    
+    const cells: GridCellData[] = numbers.map((val, idx) => ({ 
+      value: val, 
+      id: idx,
+      // Assign a random color
+      color: GRID_COLORS[Math.floor(Math.random() * GRID_COLORS.length)]
+    }));
     setGridNumbers(cells);
   }, []);
 

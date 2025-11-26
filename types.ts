@@ -14,6 +14,7 @@ export interface GameResult {
 export interface GridCellData {
   value: number;
   id: number;
+  color: string;
 }
 
 export interface AIAnalysisResponse {
