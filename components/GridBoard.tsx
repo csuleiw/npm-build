@@ -32,7 +32,7 @@ const GridBoard: React.FC<GridBoardProps> = ({
               text-3xl sm:text-5xl md:text-6xl font-bold rounded-xl transition-all duration-150 select-none
               ${isClicked 
                 ? 'bg-indigo-50 text-indigo-300 shadow-inner scale-95 cursor-default' 
-                : 'bg-white text-gray-900 shadow-md hover:shadow-lg hover:-translate-y-1 active:scale-95 border-b-4 border-gray-200 active:border-b-0 active:translate-y-1'
+                : `bg-white ${cell.color} shadow-md hover:shadow-lg hover:-translate-y-1 active:scale-95 border-b-4 border-gray-200 active:border-b-0 active:translate-y-1`
               }
               ${isWrong ? 'animate-shake bg-red-100 text-red-600 border-red-300' : ''}
               ${!isGameActive && !isClicked ? 'cursor-default opacity-80' : 'cursor-pointer'}
