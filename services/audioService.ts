@@ -1,6 +1,8 @@
 
 // Use a singleton to manage the audio context
 let audioContext: AudioContext | null = null;
+let bgmSourceNodes: AudioScheduledSourceNode[] = [];
+let bgmMasterGain: GainNode | null = null;
 
 const getAudioContext = () => {
   if (!audioContext) {
@@ -16,6 +18,81 @@ const ensureContextResumed = async () => {
     await ctx.resume();
   }
   return ctx;
+};
+
+export const startBGM = async () => {
+  if (bgmSourceNodes.length > 0) return; // Already playing
+
+  try {
+    const ctx = await ensureContextResumed();
+    
+    // Master Gain for BGM
+    bgmMasterGain = ctx.createGain();
+    bgmMasterGain.gain.value = 0; // Start silent for fade in
+    bgmMasterGain.connect(ctx.destination);
+
+    // Fade in
+    bgmMasterGain.gain.linearRampToValueAtTime(0.06, ctx.currentTime + 2); // Keep volume low (6%)
+
+    // Drone 1: Root (C3) - Foundation
+    const osc1 = ctx.createOscillator();
+    osc1.type = 'sine';
+    osc1.frequency.value = 130.81; 
+    osc1.connect(bgmMasterGain);
+    
+    // Drone 2: Fifth (G3) - Stability, slightly detuned for richness
+    const osc2 = ctx.createOscillator();
+    osc2.type = 'sine';
+    osc2.frequency.value = 196.00;
+    osc2.detune.value = 4; 
+    osc2.connect(bgmMasterGain);
+
+    // Drone 3: Major Third (E4) - Warmth, played by Triangle for texture
+    const osc3 = ctx.createOscillator();
+    osc3.type = 'triangle';
+    osc3.frequency.value = 329.63;
+    const osc3Gain = ctx.createGain();
+    osc3Gain.gain.value = 0.1; // Much quieter
+    osc3.connect(osc3Gain);
+    osc3Gain.connect(bgmMasterGain);
+
+    osc1.start();
+    osc2.start();
+    osc3.start();
+
+    bgmSourceNodes = [osc1, osc2, osc3];
+  } catch (e) {
+    console.error('Failed to start BGM', e);
+  }
+};
+
+export const stopBGM = () => {
+   if (!bgmMasterGain) return;
+   
+   const ctx = getAudioContext();
+   
+   // Fade out to avoid clicks
+   try {
+     bgmMasterGain.gain.cancelScheduledValues(ctx.currentTime);
+     bgmMasterGain.gain.setValueAtTime(bgmMasterGain.gain.value, ctx.currentTime);
+     bgmMasterGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.5);
+   } catch (e) {
+     // Ignore errors if context is weird
+   }
+
+   // Stop nodes after fade out
+   setTimeout(() => {
+     bgmSourceNodes.forEach(n => {
+       try { n.stop(); } catch(e){}
+       try { n.disconnect(); } catch(e){}
+     });
+     bgmSourceNodes = [];
+     
+     if (bgmMasterGain) {
+        try { bgmMasterGain.disconnect(); } catch(e){}
+        bgmMasterGain = null;
+     }
+   }, 500);
 };
 
 export const playClickSound = async () => {
