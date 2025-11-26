@@ -5,7 +5,7 @@ import GridBoard from './components/GridBoard';
 import StatsChart from './components/StatsChart';
 import { GameStatus, GameResult, GridCellData, AIAnalysisResponse } from './types';
 import { analyzePerformance } from './services/geminiService';
-import { playClickSound, playErrorSound, playWinSound } from './services/audioService';
+import { playClickSound, playErrorSound, playWinSound, startBGM, stopBGM } from './services/audioService';
 
 function App() {
   const [status, setStatus] = useState<GameStatus>(GameStatus.IDLE);
@@ -44,7 +44,10 @@ function App() {
     setAiAnalysis(null);
     setStatus(GameStatus.PLAYING);
     setStartTime(Date.now());
-    if (isSoundEnabled) playClickSound(); // Feedback for start
+    if (isSoundEnabled) {
+      playClickSound(); // Feedback for start
+      startBGM();
+    }
   };
 
   const stopGame = useCallback(() => {
@@ -52,6 +55,7 @@ function App() {
       window.clearInterval(timerRef.current);
       timerRef.current = null;
     }
+    stopBGM();
   }, []);
 
   const finishGame = useCallback(() => {
@@ -122,7 +126,13 @@ function App() {
   };
 
   const toggleSound = () => {
-    setIsSoundEnabled(!isSoundEnabled);
+    const newState = !isSoundEnabled;
+    setIsSoundEnabled(newState);
+    if (newState && status === GameStatus.PLAYING) {
+      startBGM();
+    } else {
+      stopBGM();
+    }
   };
 
   return (
