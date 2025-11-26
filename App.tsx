@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Play, RotateCcw, BrainCircuit, Info, Eye, Zap, Timer as TimerIcon } from 'lucide-react';
+import { Play, RotateCcw, BrainCircuit, Info, Eye, Zap, Timer as TimerIcon, Volume2, VolumeX } from 'lucide-react';
 import GridBoard from './components/GridBoard';
 import StatsChart from './components/StatsChart';
 import { GameStatus, GameResult, GridCellData, AIAnalysisResponse } from './types';
 import { analyzePerformance } from './services/geminiService';
+import { playClickSound, playErrorSound, playWinSound } from './services/audioService';
 
 function App() {
   const [status, setStatus] = useState<GameStatus>(GameStatus.IDLE);
@@ -14,6 +16,7 @@ function App() {
   const [mistakes, setMistakes] = useState<number>(0);
   const [lastWrongClick, setLastWrongClick] = useState<number | null>(null);
   const [history, setHistory] = useState<GameResult[]>([]);
+  const [isSoundEnabled, setIsSoundEnabled] = useState<boolean>(true);
   
   // AI State
   const [aiLoading, setAiLoading] = useState(false);
@@ -41,6 +44,7 @@ function App() {
     setAiAnalysis(null);
     setStatus(GameStatus.PLAYING);
     setStartTime(Date.now());
+    if (isSoundEnabled) playClickSound(); // Feedback for start
   };
 
   const stopGame = useCallback(() => {
@@ -53,6 +57,7 @@ function App() {
   const finishGame = useCallback(() => {
     stopGame();
     setStatus(GameStatus.FINISHED);
+    if (isSoundEnabled) playWinSound();
     
     if (startTime) {
       const finalTime = (Date.now() - startTime) / 1000;
@@ -67,7 +72,7 @@ function App() {
       
       setHistory(prev => [...prev, newResult]);
     }
-  }, [startTime, mistakes, stopGame]);
+  }, [startTime, mistakes, stopGame, isSoundEnabled]);
 
   useEffect(() => {
     if (status === GameStatus.PLAYING) {
@@ -92,12 +97,15 @@ function App() {
     if (status !== GameStatus.PLAYING) return;
 
     if (num === nextExpected) {
+      if (isSoundEnabled) playClickSound();
+      
       if (nextExpected === 25) {
         finishGame();
       } else {
         setNextExpected(prev => prev + 1);
       }
     } else {
+      if (isSoundEnabled) playErrorSound();
       setMistakes(prev => prev + 1);
       setLastWrongClick(num);
       setTimeout(() => setLastWrongClick(null), 500);
@@ -113,10 +121,14 @@ function App() {
     setAiLoading(false);
   };
 
+  const toggleSound = () => {
+    setIsSoundEnabled(!isSoundEnabled);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800 font-sans pb-12">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-100">
+      <header className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-20">
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="bg-indigo-600 p-2 rounded-lg">
@@ -127,7 +139,14 @@ function App() {
               <p className="text-xs text-gray-500 font-medium">Peripheral Vision Trainer</p>
             </div>
           </div>
-          <div className="flex gap-4 text-sm font-medium text-gray-600">
+          <div className="flex items-center gap-4 text-sm font-medium text-gray-600">
+            <button 
+              onClick={toggleSound}
+              className="p-2 rounded-full hover:bg-gray-100 text-gray-500 transition-colors"
+              title={isSoundEnabled ? "Mute Sound" : "Enable Sound"}
+            >
+              {isSoundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+            </button>
             <div className="flex items-center gap-1.5 bg-gray-100 px-3 py-1.5 rounded-full">
                <TimerIcon className="w-4 h-4 text-indigo-500" />
                <span className="tabular-nums w-12 text-right text-indigo-700 font-bold">
